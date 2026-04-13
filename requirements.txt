@@ -1,0 +1,7 @@
+pymupdf
+python-docx
+pytesseract
+pillow
+jinja2
+pdfkit
+requests

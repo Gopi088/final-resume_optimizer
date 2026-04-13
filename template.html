@@ -1,0 +1,84 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body {
+    font-family: Arial;
+    margin: 40px;
+    color: #222;
+}
+
+h1 { font-size: 26px; }
+
+h2 {
+    border-bottom: 2px solid #444;
+    margin-top: 25px;
+}
+
+.highlight {
+    font-weight: bold;
+    color: #0a66c2;
+}
+
+.badge {
+    display: inline-block;
+    background: #eef3ff;
+    padding: 6px 10px;
+    margin: 4px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+ul {
+    padding-left: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>{{ name }}</h1>
+<p class="highlight">{{ title }}</p>
+<p>{{ contact }}</p>
+
+<h2>Certifications</h2>
+<div>
+{% for cert in certifications %}
+    {% if "TOGAF" in cert or "Azure" in cert or "Certified" in cert %}
+        <span class="badge">{{ cert }}</span>
+    {% else %}
+        <p>{{ cert }}</p>
+    {% endif %}
+{% endfor %}
+</div>
+
+<h2>Summary</h2>
+<p>{{ summary }}</p>
+
+<h2>Skills</h2>
+<ul>
+{% for skill in skills %}
+<li class="highlight">{{ skill }}</li>
+{% endfor %}
+</ul>
+
+<h2>Experience</h2>
+{% for exp in experience %}
+<p><strong>{{ exp.role }}</strong> - {{ exp.company }}</p>
+<ul>
+{% for point in exp.points %}
+<li>{{ point }}</li>
+{% endfor %}
+</ul>
+{% endfor %}
+
+<h2>Education</h2>
+<ul>
+{% for edu in education %}
+<li>{{ edu }}</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>
