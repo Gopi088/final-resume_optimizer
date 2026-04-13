@@ -1,20 +1,17 @@
 import requests
 import json
-
-API_KEY = "your api key"
+from config import API_KEY, BASE_URL, MODEL
 
 
 def extract_resume_structure(resume_text):
-    url = "https://api.deepseek.com/v1/chat/completions"
-
     prompt = f"""
-Extract structured data from resume.
+Extract ALL information from the resume.
 
 STRICT RULES:
 - DO NOT rewrite
 - DO NOT summarize
-- DO NOT remove anything
-- Copy exact data
+- Capture ALL sections
+- If section unknown → put in "extra_sections"
 
 Return JSON:
 
@@ -24,15 +21,20 @@ Return JSON:
   "contact": "",
   "summary": "",
   "skills": [],
-  "certifications": [],
   "education": [],
+  "certifications": [],
   "experience": [
     {{
       "role": "",
       "company": "",
       "points": []
     }}
-  ]
+  ],
+  "projects": [],
+  "awards": [],
+  "achievements": [],
+  "publications": [],
+  "extra_sections": {{}}
 }}
 
 Resume:
@@ -40,17 +42,17 @@ Resume:
 """
 
     payload = {
-        "model": "deepseek-chat",
+        "model": MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0
     }
 
     headers = {
-        "Authorization": f"Bearer {"sk-32f48dc7d23a4ec8b80cb8318bf36b67"}",
+        "Authorization": f"Bearer {API_KEY}",   # ✅ FIXED
         "Content-Type": "application/json"
     }
 
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(BASE_URL, headers=headers, json=payload)
     result = response.json()
 
     return result["choices"][0]["message"]["content"]

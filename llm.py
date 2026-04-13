@@ -1,61 +1,91 @@
 import requests
 import json
+import time
+from config import API_KEY, BASE_URL, MODEL
 
-API_KEY = "your api key"
+
+def safe_request(url, headers, payload, retries=3):
+    for attempt in range(retries):
+        try:
+            print(f"📦 Payload size: {len(json.dumps(payload))} characters")
+
+            response = requests.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=120  # 🔥 Increased timeout
+            )
+
+            return response.json()
+
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ Retry {attempt + 1}: {e}")
+            time.sleep(2)
+
+    print("❌ API failed after retries")
+    return None
 
 
-def rewrite_resume(data, jd_text):
-    url = "https://api.deepseek.com/v1/chat/completions"
+def rewrite_resume(resume_data, jd_text):
+    """
+    🔥 Optimizes ONLY summary + experience
+    Prevents large payload → avoids timeout
+    """
+
+    # 🔥 Extract only needed parts (VERY IMPORTANT)
+    summary = resume_data.get("summary", "")
+    experience = resume_data.get("experience", [])
+
+    # 🔥 Limit JD size to avoid timeout
+    jd_text_limited = jd_text[:3000]
 
     prompt = f"""
-You are a resume optimizer.
+You are an expert resume optimizer.
 
 STRICT RULES:
-- DO NOT remove any data
-- DO NOT remove any section
-- DO NOT rewrite name, education, certifications, skills
-- DO NOT add new content
-- DO NOT reduce number of points
+- Do NOT remove ANY content
+- Do NOT skip ANY section
+- Improve ONLY summary and experience
+- Do NOT change structure
+- Do NOT remove projects, awards, achievements
+- Do NOT add fake data
 
-ONLY:
-- Improve summary wording
-- Improve experience bullet points
+Return JSON format:
+{{
+  "summary": "",
+  "experience": [
+    {{
+      "role": "",
+      "company": "",
+      "points": []
+    }}
+  ]
+}}
 
-IMPORTANT:
-- Keep ALL original content
-- Enhance wording only (no meaning change)
+Resume Summary:
+{summary}
 
-Return SAME JSON structure.
-
-Resume JSON:
-{json.dumps(data)}
+Experience:
+{json.dumps(experience)}
 
 Job Description:
-{jd_text}
+{jd_text_limited}
 """
 
     payload = {
-        "model": "deepseek-chat",
+        "model": MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3
     }
 
     headers = {
-        "Authorization": f"Bearer {"sk-32f48dc7d23a4ec8b80cb8318bf36b67"}",
+        "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
     }
 
-    response = requests.post(url, headers=headers, json=payload)
+    result = safe_request(BASE_URL, headers, payload)
 
-    try:
-        result = response.json()
-    except:
-        print("❌ API error")
-        print(response.text)
-        return ""
-
-    if "choices" not in result:
-        print("❌ DeepSeek error:", result)
-        return ""
+    if not result or "choices" not in result:
+        return None
 
     return result["choices"][0]["message"]["content"]
